@@ -234,3 +234,166 @@ def et_time_series_with_sigmas(twr_block):
     plt.plot(i2xw*0, linewidth=1, color='r', linestyle='dashed', )
 
     return plt
+
+
+def field_health_pdf_page(date, thr_block, levels, output):
+    # set dates
+    date_list = date_list_generator(date)
+
+    lai_da = thr_block.LAI.sel(time = date_list)
+    geom = shapely.wkt.loads(twr_block.aoi)
+    g = gpd.GeoSeries([geom])
+
+    # Irregular levels to illustrate the use of a proportional colorbar
+    levels = levels
+    # Prepare the figure
+    f, ax_gr = plt.subplots(4, 3, figsize=(13, 18))
+    for liy in range(4):
+        for lix in range(3):
+            ax1 = ax_gr[liy, lix]
+        
+            lai_da.isel(time=(liy*3+lix)).plot(
+                ax=ax1, cmap='YlGn',levels=levels, cbar_kwargs={"ticks": levels, "spacing": "proportional"}
+            )
+            g.plot(ax=ax1, facecolor='none', edgecolor='royalblue',linewidth=4)
+            ax1.xaxis.set_major_locator(ticker.NullLocator())
+            ax1.yaxis.set_major_locator(ticker.NullLocator())
+            ax1.set(xlabel=None)
+            ax1.set(ylabel=None)
+
+    # Show plots
+    plt.tight_layout()
+    plt.savefig(output)
+
+def leaching_risk_page(date, btm_block, output):
+    date_list = date_list_generator(date) 
+    rsk_da = btm_block.wexcess_risk.sel(time = date_list)
+    rsklabel ="Leaching Risk (%)"
+    # Irregular levels to illustrate the use of a proportional colorbar
+    levels_cmbn = np.array([q for q in range(0,11)])*10+0.001
+    levels = levels_cmbn.tolist()
+    geom = shapely.wkt.loads(btm_block.aoi)
+    g = gpd.GeoSeries([geom])
+
+
+    f, ax_gr = plt.subplots(4, 3, figsize=(13, 18))
+    for liy in range(4):
+        for lix in range(3):
+            ax1 = ax_gr[liy, lix]
+            rsk_da.isel(time=(liy*3+lix)).plot(ax=ax1, cmap='YlGnBu', levels=levels, 
+                       cbar_kwargs={"label": rsklabel, "ticks": levels, "spacing": "proportional"})
+        
+            g.plot(ax=ax1, facecolor='none', edgecolor='Orange',linewidth=4)
+            ax1.xaxis.set_major_locator(ticker.NullLocator())
+            ax1.yaxis.set_major_locator(ticker.NullLocator())
+            ax1.set(xlabel=None)
+            ax1.set(ylabel=None)
+
+    # Show plots
+    plt.tight_layout()
+
+    # save the file 4
+
+    plt.savefig(output)
+
+def drought_page(date, btm_block, output):
+    date_list = date_list_generator(date)    
+    rsk_da = btm_block.wshort_risk.sel(time = date_list)
+    rsklabel ="Leaching Risk (%)"
+    # Irregular levels to illustrate the use of a proportional colorbar
+    levels_cmbn = np.array([q for q in range(0,11)])*10+0.001
+    levels = levels_cmbn.tolist()
+    geom = shapely.wkt.loads(btm_block.aoi)
+    g = gpd.GeoSeries([geom])
+
+
+    f, ax_gr = plt.subplots(4, 3, figsize=(13, 18))
+    for liy in range(4):
+        for lix in range(3):
+            ax1 = ax_gr[liy, lix]
+            rsk_da.isel(time=(liy*3+lix)).plot(ax=ax1, cmap='RdYlGn_r', levels=levels, 
+                           cbar_kwargs={"label": rsklabel, "ticks": levels, "spacing": "proportional"})
+        
+            g.plot(ax=ax1, facecolor='none', edgecolor='Orange',linewidth=4)
+            ax1.xaxis.set_major_locator(ticker.NullLocator())
+            ax1.yaxis.set_major_locator(ticker.NullLocator())
+            ax1.set(xlabel=None)
+            ax1.set(ylabel=None)
+
+    # Show plots
+    plt.tight_layout()
+    # save the file 5
+
+
+    plt.savefig(output)
+
+def soil_moisture_weekly(date, btm_block, levels, output):
+    date_list = date_list_generator(date)
+    smc_da = btm_block.assim_rz_sm_est.sel(time = date_list)
+    smc_da_in = smc_da*1000/25.4
+    smlabel ="Abs Soil Moisture Content (in)"
+    # Irregular levels to illustrate the use of a proportional colorbar
+    levels_cmbn = (np.array(levels)+4)
+    levels = levels_cmbn.tolist()
+    geom = shapely.wkt.loads(btm_block.aoi)
+    g = gpd.GeoSeries([geom])
+
+
+    f, ax_gr = plt.subplots(4, 3, figsize=(13, 18))
+    for liy in range(4):
+        for lix in range(3):
+            ax1 = ax_gr[liy, lix]
+            smc_da_in.isel(time=(liy*3+lix)).plot(ax=ax1, cmap='YlGnBu', levels=levels, 
+                           cbar_kwargs={"label": smlabel, "ticks": levels, "spacing": "proportional"})
+        
+            g.plot(ax=ax1, facecolor='none', edgecolor='Orange',linewidth=4)
+            ax1.xaxis.set_major_locator(ticker.NullLocator())
+            ax1.yaxis.set_major_locator(ticker.NullLocator())
+            ax1.set(xlabel=None)
+            ax1.set(ylabel=None)
+
+    # Show plots
+    plt.tight_layout()
+
+    # save the file 3rd
+
+    plt.savefig(output)
+
+def crop_water_use_maps_page(date, twr_block, levels, output):
+
+    # set dates
+    first_date = pd.to_datetime(date)
+    date_list = date_list_generator(first_date)
+
+    eta_da = twr_block.ETA_est_mm_day.sel(time = date_list)
+    eta_da_in = eta_da/25.4*7
+
+    geom = shapely.wkt.loads(twr_block.aoi)
+    # global g
+    g = gpd.GeoSeries([geom])
+    etlabel ="ET in"
+    
+
+    # Irregular levels to illustrate the use of a proportional colorbar
+    levels_cmbn = np.array(levels)*1.12/25.4*7
+    levels = levels_cmbn.tolist()
+
+    f, ax_gr = plt.subplots(4, 3, figsize=(13, 18))
+    for liy in range(4):
+        for lix in range(3):
+            ax1 = ax_gr[liy, lix]
+            eta_da_in.isel(time=(liy*3+lix)).plot(ax=ax1, cmap='Oranges', levels=levels, 
+                       cbar_kwargs={"label": etlabel, "ticks": levels, "spacing": "proportional"})
+        
+            g.plot(ax=ax1, facecolor='none', edgecolor='royalblue',linewidth=4)
+            ax1.xaxis.set_major_locator(ticker.NullLocator())
+            ax1.yaxis.set_major_locator(ticker.NullLocator())
+            ax1.set(xlabel=None)
+            ax1.set(ylabel=None)
+
+    # Show plots
+    plt.title('Crop Water Use Variability')
+    plt.tight_layout()
+    # save the file 2nd
+    plt.savefig(output)
+    
