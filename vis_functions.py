@@ -236,12 +236,30 @@ def et_time_series_with_sigmas(twr_block):
     return plt
 
 
-def field_health_pdf_page(date, thr_block, levels, output):
+def field_health_pdf_page(date, thr_block, output, levels = [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]):
+    """
+    This function generates a PDF page visualizing field health data using a 
+    color-coded map. The map represents the Leaf Area Index (LAI) data over 
+    a specified time range.
+
+    :param date:  date 
+    :type date: str format: YYYY-MM-DD Ex: 2023-12-01
+    :param thr_block: Dataset containing field data, including 'LAI' and 'aoi' 
+                      attributes.
+    :type thr_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :param levels: Custom levels for the proportional colorbar. Defaults to 
+                   [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8].
+    :type levels: list of float, optional
+    :return: None
+    """
+
     # set dates
     date_list = date_list_generator(date)
 
     lai_da = thr_block.LAI.sel(time = date_list)
-    geom = shapely.wkt.loads(twr_block.aoi)
+    geom = shapely.wkt.loads(thr_block.aoi)
     g = gpd.GeoSeries([geom])
 
     # Irregular levels to illustrate the use of a proportional colorbar
@@ -266,6 +284,22 @@ def field_health_pdf_page(date, thr_block, levels, output):
     plt.savefig(output)
 
 def leaching_risk_page(date, btm_block, output):
+    """
+    This function generates a PDF page visualizing leaching risk using a
+    color-coded map. The map represents the leaching risk percentage over 
+    a specified time period.
+
+    :param date: Date string in the format YYYY-MM-DD, representing the start 
+                 date for the leaching risk visualization.
+    :type date: str
+    :param btm_block: Dataset containing leaching risk data ('wexcess_risk') 
+                      and the area of interest (AOI) geometry.
+    :type btm_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :return: None
+    """
+
     date_list = date_list_generator(date) 
     rsk_da = btm_block.wexcess_risk.sel(time = date_list)
     rsklabel ="Leaching Risk (%)"
@@ -292,11 +326,26 @@ def leaching_risk_page(date, btm_block, output):
     # Show plots
     plt.tight_layout()
 
-    # save the file 4
-
+    # save the file
     plt.savefig(output)
 
 def drought_page(date, btm_block, output):
+    """
+    This function generates a PDF page visualizing drought
+    risk using a color-coded map. The map represents the leaching
+    risk percentate over a specified time period.
+
+    :param date: Date string in the format YYYY-MM-DD, representing the start 
+                 date for the drought risk visualization.
+    :type date: str
+    :param btm_block: Dataset containing drought risk data ('wshort_risk') 
+                      and the area of interest (AOI) geometry.
+    :type btm_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :return: None  
+    """
+
     date_list = date_list_generator(date)    
     rsk_da = btm_block.wshort_risk.sel(time = date_list)
     rsklabel ="Leaching Risk (%)"
@@ -322,12 +371,29 @@ def drought_page(date, btm_block, output):
 
     # Show plots
     plt.tight_layout()
-    # save the file 5
-
-
+    # save the file
     plt.savefig(output)
 
-def soil_moisture_weekly(date, btm_block, levels, output):
+def soil_moisture_weekly(date, btm_block, output, levels = [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]):
+    """
+    This function generates a PDF page visualizing weekly
+    soil moisture data using a color-coded map. The map reprents
+    the soil moisture content for a specified time period.
+
+    :param date: Date string in the format YYYY-MM-DD, representing the start 
+                 date for the weekly soil moisture visualization.
+    :type date: str
+    :param btm_block: Dataset containing soil moisture data ('assim_rz_sm_est') 
+                      and the area of interest (AOI) geometry.
+    :type btm_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :param levels: Custom levels for the proportional colorbar. Defaults to 
+                   [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8].
+    :type levels: list of float, optional
+    :return: None
+    """
+        
     date_list = date_list_generator(date)
     smc_da = btm_block.assim_rz_sm_est.sel(time = date_list)
     smc_da_in = smc_da*1000/25.4
@@ -355,11 +421,28 @@ def soil_moisture_weekly(date, btm_block, levels, output):
     # Show plots
     plt.tight_layout()
 
-    # save the file 3rd
-
+    # save the file
     plt.savefig(output)
 
-def crop_water_use_maps_page(date, twr_block, levels, output):
+def crop_water_use_maps_page(date, twr_block, output, levels = [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]):
+    """
+    This function generates a PDF page visualizing weekly
+    crop water use data using a color-coded map. The map reprents
+    estimated evapotranspiration for a specified time period.
+
+    :param date: Date string in the format YYYY-MM-DD, representing the start 
+                 date for the weekly crop water use visualization.
+    :type date: str
+    :param twr_block: Dataset containing crop water use data ('ETA_est_mm_day') 
+                      and the area of interest (AOI) geometry.
+    :type twr_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :param levels: Custom levels for the proportional colorbar. Defaults to 
+                   [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8].
+    :type levels: list of float, optional
+    :return: None
+    """
 
     # set dates
     first_date = pd.to_datetime(date)
@@ -394,6 +477,5 @@ def crop_water_use_maps_page(date, twr_block, levels, output):
     # Show plots
     plt.title('Crop Water Use Variability')
     plt.tight_layout()
-    # save the file 2nd
+    # save the file
     plt.savefig(output)
-    
