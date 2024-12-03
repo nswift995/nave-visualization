@@ -15,20 +15,45 @@ from osgeo import gdal
 
 
 def date_list_generator(date):
+    """
+    Generates a list of dates, starting from the given date and incrementing by 7 days 
+    for a total of 12 weeks.
+
+    :param date: Starting date in the format YYYY-MM-DD.
+    :type date: str
+    :return: List of dates, with each subsequent date incremented by 7 days.
+    :rtype: list of pandas.Timestamp
+    """
     firt_date = pd.to_datetime(date)
     date_list = [firt_date]
     for iw in range(11):
-        next_date = firt_date + pd.to_timedelta((iw+1)*7, 'D')
-        #print(next_date)
+        next_date = firt_date + pd.to_timedelta((iw + 1) * 7, 'D')
         date_list.append(next_date)
-    return(date_list)
+    return date_list
 
 
 def create_granule_dict(input_dir):
-    '''
-    this is where we talk
+    """
+    Parses the input directory to identify and load dataset files into a dictionary.
+    The function recognizes specific file naming patterns to assign datasets to 
+    relevant categories (e.g., soil, weather, bottom blocks, etc.).
 
-    '''
+    :param input_dir: Directory containing dataset files to be processed.
+    :type input_dir: str
+    :return: A dictionary containing paths and datasets for different data blocks.
+             The dictionary keys include:
+                - 'btm1_block': Bottom block dataset (xarray.Dataset).
+                - 'wth1_block': Weather block dataset (xarray.Dataset).
+                - 'twr1_block': Top work-resolution dataset (xarray.Dataset).
+                - 'thr1_block': Top high-resolution dataset (xarray.Dataset).
+                - 'soi1_block': Soil dataset (xarray.Dataset).
+                - 'btm1_path': File path of the bottom block dataset.
+                - 'wth1_path': File path of the weather block dataset.
+                - 'twr1_path': File path of the top work-resolution dataset.
+                - 'thr1_path': File path of the top high-resolution dataset.
+                - 'soi1_path': File path of the soil dataset.
+    :rtype: dict
+    """
     input_path = input_dir
     granule = dict({
             'btm1_block' : None, # bottom
@@ -66,10 +91,21 @@ def create_granule_dict(input_dir):
                     granule['twr1_block'] = xr.open_dataset(os.path.join(input_path, file))
     return granule
 
-def build_evapotranspiration_map(forecast_date, twr_block):
-    '''
-    this is whrere we talk 
-    '''
+def build_evapotranspiration_map(forecast_date, twr_block, output):
+    """
+    Generates a map visualization of evapotranspiration (ET) for the past 3 and 
+    7 days, using data from the provided dataset. Results are displayed in 
+    imperial units (inches).
+
+    :param forecast_date: The date from which the analysis is centered.
+    :type forecast_date: pd.Timestamp or datetime-like
+    :param twr_block: Dataset containing evapotranspiration data (`ETA_est_mm_day`) 
+                      and the area of interest (AOI) geometry.
+    :type twr_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :return: None
+    """
     up_to_date = forecast_date- pd.Timedelta('1 days') 
 
     # for eye candy
@@ -109,8 +145,6 @@ def build_evapotranspiration_map(forecast_date, twr_block):
 
     ax1.title.set_text("Since 7 days ago")
     ax2.title.set_text("Since 3 days ago")
-    #ax1.set_axis_off()
-    #ax2.set_axis_off()
     ax1.xaxis.set_major_locator(ticker.NullLocator())
     ax1.yaxis.set_major_locator(ticker.NullLocator())
     ax2.xaxis.set_major_locator(ticker.NullLocator())
@@ -121,11 +155,22 @@ def build_evapotranspiration_map(forecast_date, twr_block):
     ax2.set(ylabel=None)
     # Show plots,
     #plt.tight_layout()
-    return plt
+    plt.savefig(output)
 
-def build_leaching_map(forecast_date, btm_block):
-    '''
-    '''
+def build_leaching_map(forecast_date, btm_block, output):
+    """
+    Generates a map visualization of leaching risk percentages for past, 
+    current, and future time periods, using data from the provided dataset.
+
+    :param forecast_date: The date from which the analysis is centered.
+    :type forecast_date: pd.Timestamp or datetime-like
+    :param btm_block: Dataset containing leaching risk data (`wexcess_risk`) 
+                      and the area of interest (AOI) geometry.
+    :type btm_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :return: None  
+    """
     #standard
     up_to_date = forecast_date - pd.Timedelta('1 days') 
 
@@ -168,11 +213,30 @@ def build_leaching_map(forecast_date, btm_block):
     ax2.set(ylabel=None)
     ax3.set(xlabel=None)
     ax3.set(ylabel=None)
+
     # Show plots,
     plt.tight_layout()
-    return plt
+    plt.savefig(output)
 
-def build_precip_irri_map(wth_block, twr_block, forecast_transit_date):
+
+def build_precip_irri_map(wth_block, twr_block, forecast_transit_date, output):
+    """
+    Creates a bar chart visualization of precipitation and irrigation data, 
+    with a split marker for forecast and observation data.
+
+    :param wth_block: Dataset containing precipitation data (`Precip_m_d`) 
+                      with time as one of the dimensions.
+    :type wth_block: xarray.Dataset
+    :param twr_block: Dataset containing irrigation data (`irrigtn_mm_d`) 
+                      with time as one of the dimensions.
+    :type twr_block: xarray.Dataset
+    :param forecast_transit_date: Date marking the transition between 
+                                observed and forecast data.
+    :type forecast_transit_date: str (YYYY-MM-DD)
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :return: None
+    """
 
     precip_array = wth_block.Precip_m_d.data #* 100.0 # to mm Note it has to be 100
     precip_array = precip_array.reshape([precip_array.shape[0]],)/25.4
@@ -201,9 +265,22 @@ def build_precip_irri_map(wth_block, twr_block, forecast_transit_date):
     plt.text(forecast_transit_date, precip_df['precip'].max(), ' Forecast',
             verticalalignment='bottom', horizontalalignment='left',
             color='red', fontsize=10)
-    return plt
+    
+    plt.savefig(output)
 
-def et_time_series_with_sigmas(twr_block):
+def et_time_series_with_sigmas(twr_block, output):
+    """
+    Generates a time series plot of evapotranspiration (ET) estimates with 
+    standard deviation (sigma) bands using data from the provided dataset.
+
+    :param twr_block: Dataset containing ET estimates (`ETA_est_mm_day`) and 
+                      their standard deviations (`ETA_sgm_mm_day`), with 
+                      spatial and temporal dimensions.
+    :type twr_block: xarray.Dataset
+    :param output: File path where the generated PDF page will be saved.
+    :type output: str
+    :return: None
+    """
     # set first to 0 always 
     twr_block.ETA_est_mm_day.loc[dict(time=twr_block.time.min())] = 0
     twr_block.ETA_sgm_mm_day.loc[dict(time=twr_block.time.min())] = 0
@@ -233,7 +310,7 @@ def et_time_series_with_sigmas(twr_block):
     plt.plot(i2xw, linewidth=1, color='r', linestyle='dashed' ) 
     plt.plot(i2xw*0, linewidth=1, color='r', linestyle='dashed', )
 
-    return plt
+    plt.savefig(output)
 
 
 def field_health_pdf_page(date, thr_block, output, levels = [1, 2, 3, 4, 4.5, 5, 5.5, 6, 6.5, 7, 7.5, 8]):
