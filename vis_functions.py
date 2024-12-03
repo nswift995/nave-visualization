@@ -72,10 +72,10 @@ def create_granule_dict(input_dir):
     for (root,dirs,files) in os.walk(input_path, topdown=True):
         for file in files:
             #print(file)
-            if 'FBTM_SO' in file :
+            if 'SGR2' in file :
                 granule['soi1_path'] = os.path.join(input_path,file)
                 granule['soi1_block'] = xr.open_dataset(os.path.join(input_path, file))
-            if 'FBTM_DO' in file :
+            if 'FBTM' in file :
                 granule['btm1_path'] = os.path.join(input_path,file)
                 granule['btm1_block'] = xr.open_dataset(os.path.join(input_path, file))
             if 'FW1D' in file :
@@ -156,7 +156,7 @@ def build_evapotranspiration_map(twr_block, output):
     #plt.tight_layout()
     plt.savefig(output)
 
-def build_leaching_map(forecast_date, btm_block, output):
+def build_leaching_map(btm_block, output):
     """
     Generates a map visualization of leaching risk percentages for past, 
     current, and future time periods, using data from the provided dataset.
@@ -171,6 +171,7 @@ def build_leaching_map(forecast_date, btm_block, output):
     :return: None  
     """
     #standard
+    forecast_date = pd.to_datetime(btm_block.attrs['Forecast_transit_date'])
     up_to_date = forecast_date - pd.Timedelta('1 days') 
 
     # for eye candy
@@ -218,7 +219,7 @@ def build_leaching_map(forecast_date, btm_block, output):
     plt.savefig(output)
 
 
-def build_precip_irri_map(wth_block, twr_block, forecast_transit_date, output):
+def build_precip_irri_map(wth_block, twr_block, output):
     """
     Creates a bar chart visualization of precipitation and irrigation data, 
     with a split marker for forecast and observation data.
@@ -229,13 +230,11 @@ def build_precip_irri_map(wth_block, twr_block, forecast_transit_date, output):
     :param twr_block: Dataset containing irrigation data (`irrigtn_mm_d`) 
                       with time as one of the dimensions.
     :type twr_block: xarray.Dataset
-    :param forecast_transit_date: Date marking the transition between 
-                                observed and forecast data.
-    :type forecast_transit_date: str (YYYY-MM-DD)
     :param output: File path where the generated PDF page will be saved.
     :type output: str
     :return: None
     """
+    forecast_transit_date = pd.to_datetime(twr_block.attrs['Forecast_transit_date'])
 
     precip_array = wth_block.Precip_m_d.data #* 100.0 # to mm Note it has to be 100
     precip_array = precip_array.reshape([precip_array.shape[0]],)/25.4
