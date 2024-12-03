@@ -91,12 +91,14 @@ def create_granule_dict(input_dir):
                     granule['twr1_block'] = xr.open_dataset(os.path.join(input_path, file))
     return granule
 
-def build_evapotranspiration_map(twr_block, output):
+def build_evapotranspiration_map(forecast_date, twr_block, output):
     """
     Generates a map visualization of evapotranspiration (ET) for the past 3 and 
     7 days, using data from the provided dataset. Results are displayed in 
     imperial units (inches).
 
+    :param forecast_date: The date from which the analysis is centered.
+    :type forecast_date: pd.Timestamp or datetime-like
     :param twr_block: Dataset containing evapotranspiration data (`ETA_est_mm_day`) 
                       and the area of interest (AOI) geometry.
     :type twr_block: xarray.Dataset
@@ -104,7 +106,6 @@ def build_evapotranspiration_map(twr_block, output):
     :type output: str
     :return: None
     """
-    forecast_date = pd.to_datetime(twr_block.attrs['Forecast_transit_date'])
     up_to_date = forecast_date- pd.Timedelta('1 days') 
 
     # for eye candy
